@@ -1,0 +1,117 @@
+﻿<Window x:Class="StreamingSoundtracks.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:fa="http://schemas.fontawesome.io/icons/"
+        xmlns:local="clr-namespace:StreamingSoundtracks"
+        xmlns:p="clr-namespace:StreamingSoundtracks.Properties"
+        mc:Ignorable="d"
+        x:Name="Window"
+        Title="StreamingSoundtracks" 
+        MinHeight="550" Height="{Binding Source={x:Static p:Settings.Default}, Path=WindowHeight}" MinWidth="600" Width="{Binding Source={x:Static p:Settings.Default}, Path=WindowWidth}" 
+        Closing="Window_Closing" SizeChanged="Window_SizeChanged"
+        FontSize="15">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition/>
+            <RowDefinition Height="3*"/>
+            <RowDefinition/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!--====================================================================================
+                                                    Queue
+        =====================================================================================-->
+        <Grid Grid.Row="0">
+            <ItemsControl Name="Queue" ItemsSource="{Binding Queue}" ItemTemplate="{StaticResource QueueTemplate}" BorderBrush="{x:Null}" Background="{x:Null}" VerticalContentAlignment="Stretch">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel Orientation="Horizontal"/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+            </ItemsControl>
+            <StackPanel HorizontalAlignment="Left" Visibility="{Binding Path=ShowQueueHistoryHeader, RelativeSource={RelativeSource AncestorType={x:Type Window}}, Converter={StaticResource visibilityConverter}}">
+                <TextBlock Background="#DDFFFFFF" Padding="3" FontSize="18" Text="{x:Static p:Resources.QueueTitle}"/>
+            </StackPanel>
+        </Grid>
+        <Grid Grid.Row="1" Margin="10">
+            <Grid.RowDefinitions>
+                <RowDefinition/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <!--====================================================================================
+                                             Currently Playing
+            =====================================================================================-->
+            <Frame x:Name="CenterControl" NavigationUIVisibility="Hidden"/>
+            <!--====================================================================================
+                                               Playback Controls
+            =====================================================================================-->
+            <Grid x:Name="PlaybackControls" Grid.Row="1" Margin="0,10,0,0" Height="60">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width=" Auto"/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+                <Grid.Resources>
+                    <Style TargetType="Button">
+                        <Setter Property="BorderBrush" Value="{x:Null}"/>
+                        <Setter Property="Background" Value="{x:Null}"/>
+                    </Style>
+                </Grid.Resources>
+                <Button x:Name="StartStopButton" Grid.Column="0" Click="StartStopButton_Click" Margin="80,8">
+                    <fa:ImageAwesome x:Name="StartStopIcon" Icon="{Binding IsPlaying, Converter={StaticResource isPlayingIconConverter}, FallbackValue=Play}" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                </Button>
+                <Grid x:Name="VolumeSlider" Grid.Column="1">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <Button x:Name="MuteButton" Grid.Column="0" Click="MuteButton_Click" Margin="15">
+                        <StackPanel Orientation="Horizontal">
+                            <fa:ImageAwesome Icon="VolumeOff" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                            <fa:ImageAwesome Icon="Times" Margin="4,2,0,2" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{Binding IsMuted, Converter={StaticResource isMutedColorConverter}}"/>
+                        </StackPanel>
+                    </Button>
+                    <Grid Grid.Column="1">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition/>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,-100">
+                            <TextBlock Text="{x:Static p:Resources.VolumeDescription}"/>
+                            <TextBlock Text=": "/>
+                            <TextBlock Text="{Binding Volume, StringFormat=p0, FallbackValue=100%}" HorizontalAlignment="Center" Width="40"/>
+                        </StackPanel>
+                        <Slider Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" Value="{Binding Volume}" Minimum="0" Maximum="1" SmallChange="0.01" LargeChange="0.1" TickFrequency="0.1" VerticalAlignment="Center"/>
+                    </Grid>
+                    <Button x:Name="SettingsButton" Grid.Column="2" Margin="15" Click="SettingsButton_Click">
+                        <fa:ImageAwesome Icon="Cog" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                    </Button>
+                </Grid>
+            </Grid>
+        </Grid>
+        <!--====================================================================================
+                                                    History
+        =====================================================================================-->
+        <Grid Grid.Row="2">
+            <ItemsControl Grid.Row="1" Name="History" ItemsSource="{Binding History}" ItemTemplate="{StaticResource HistoryTemplate}" BorderBrush="{x:Null}" Background="{x:Null}" VerticalContentAlignment="Stretch" HorizontalAlignment="Stretch">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel Orientation="Horizontal"/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+            </ItemsControl>
+            <StackPanel HorizontalAlignment="Left" Visibility="{Binding Path=ShowQueueHistoryHeader, RelativeSource={RelativeSource AncestorType={x:Type Window}}, Converter={StaticResource visibilityConverter}}">
+                <TextBlock Background="#DDFFFFFF" Padding="3" FontSize="18" Text="{x:Static p:Resources.HistoryTitle}"/>
+            </StackPanel>
+        </Grid>
+
+        <TextBlock Text="{Binding Log}"/>
+    </Grid>
+</Window>

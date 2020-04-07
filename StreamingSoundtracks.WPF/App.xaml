@@ -1,0 +1,82 @@
+﻿<Application x:Class="StreamingSoundtracks.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:sst="clr-namespace:StreamingSoundtracks.Core;assembly=StreamingSoundtracks.Core"
+             xmlns:local="clr-namespace:StreamingSoundtracks"
+             xmlns:p="clr-namespace:StreamingSoundtracks.Properties"
+             StartupUri="MainWindow.xaml">
+    <Application.Resources>
+        <Style TargetType="Button">
+            <Setter Property="Padding" Value="5"/>
+        </Style>
+
+        <local:LinkToBitmapConverter x:Key="coverConverter"/>
+        <local:MessageToVisibilityConverter x:Key="messageVisibilityConverter"/>
+        <local:IndexStringToIndexConverter x:Key="indexConverter"/>
+        <local:TimeSpanToSecondsConverter x:Key="timeSpanConverter"/>
+        <local:TimeSpanToCurrentQueueConverter x:Key="timeSpanQueueConverter"/>
+        <local:TimeSpanToCurrentHistoryConverter x:Key="timeSpanHistoryConverter"/>
+        <local:IsPlayingToIconConverter x:Key="isPlayingIconConverter"/>
+        <local:IsMutedToBrushConverter x:Key="isMutedColorConverter"/>
+        <local:BooleanToVisibiltyConverter x:Key="visibilityConverter"/>
+
+        <DataTemplate x:Key="QueueTemplate" DataType="{x:Type sst:PlaybackEntry}">
+            <Grid>
+                <Image Source="{Binding CoverLink, Converter={StaticResource coverConverter}}" ToolTipService.InitialShowDelay="0" ToolTipService.ShowDuration="60000" MinHeight="{Binding ElementName=Window, Path=ImageHeight}" VerticalAlignment="Center" Opacity=".75">
+                    <Image.ToolTip>
+                        <StackPanel>
+                            <TextBlock FontWeight="Bold" Text="{Binding Album}"/>
+                            <TextBlock Text="{Binding Track}"/>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="Length: "/>
+                                <TextBlock Text="{Binding Length, StringFormat=mm\\:ss}"/>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="{x:Static p:Resources.RequestedByDescription}"/>
+                                <TextBlock Text=": "/>
+                                <TextBlock Text="{Binding RequestedBy}"/>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Visibility="{Binding Message, Converter={StaticResource messageVisibilityConverter}}">
+                                <TextBlock Text="Message: "/>
+                                <TextBlock Text="{Binding Message}"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Image.ToolTip>
+                </Image>
+                <StackPanel VerticalAlignment="Bottom" Visibility="{Binding Path=ShowQueueHistoryEstimates, RelativeSource={RelativeSource AncestorType={x:Type Window}}, Converter={StaticResource visibilityConverter}}">
+                    <TextBlock Background="#CCFFFFFF" Padding="3,1,3,1" Margin="3" Text="{Binding TimeToCurrentPlaying, Converter={StaticResource timeSpanQueueConverter}}"/>
+                </StackPanel>
+            </Grid>
+        </DataTemplate>
+
+        <DataTemplate x:Key="HistoryTemplate" DataType="{x:Type sst:PlaybackEntry}">
+            <Grid>
+                <Image Source="{Binding CoverLink, Converter={StaticResource coverConverter}}" ToolTipService.InitialShowDelay="0" ToolTipService.ShowDuration="60000" MinHeight="{Binding ElementName=Window, Path=ImageHeight}" VerticalAlignment="Center" Opacity=".5">
+                    <Image.ToolTip>
+                        <StackPanel>
+                            <TextBlock FontWeight="Bold" Text="{Binding Album}"/>
+                            <TextBlock Text="{Binding Track}"/>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="Length: "/>
+                                <TextBlock Text="{Binding Length, StringFormat=mm\\:ss}"/>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="{x:Static p:Resources.RequestedByDescription}"/>
+                                <TextBlock Text=": "/>
+                                <TextBlock Text="{Binding RequestedBy}"/>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Visibility="{Binding Message, Converter={StaticResource messageVisibilityConverter}}">
+                                <TextBlock Text="Message: "/>
+                                <TextBlock Text="{Binding Message}"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Image.ToolTip>
+                </Image>
+                <StackPanel VerticalAlignment="Bottom" Visibility="{Binding Path=ShowQueueHistoryEstimates, RelativeSource={RelativeSource AncestorType={x:Type Window}}, Converter={StaticResource visibilityConverter}}">
+                    <TextBlock Background="#CCFFFFFF" Padding="3,1,3,1" Margin="3" Text="{Binding TimeToCurrentPlaying, Converter={StaticResource timeSpanHistoryConverter}}"/>
+                </StackPanel>
+            </Grid>
+
+        </DataTemplate>
+    </Application.Resources>
+</Application>
