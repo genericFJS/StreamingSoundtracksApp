@@ -49,6 +49,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CircularStream.cs" />
     <Compile Include="Coordinator.cs" />
     <Compile Include="CurrentPlaying.cs" />
     <Compile Include="PlaybackEntry.cs" />

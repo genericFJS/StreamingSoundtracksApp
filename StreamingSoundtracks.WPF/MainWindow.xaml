@@ -111,7 +111,5 @@
                 <TextBlock Background="#DDFFFFFF" Padding="3" FontSize="18" Text="{x:Static p:Resources.HistoryTitle}"/>
             </StackPanel>
         </Grid>
-
-        <TextBlock Text="{Binding Log}"/>
     </Grid>
 </Window>

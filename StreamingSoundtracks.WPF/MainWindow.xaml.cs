@@ -87,6 +87,13 @@ namespace StreamingSoundtracks
                 Coordinator.StartAudioStream();
 
             Window_SizeChanged(null, null);
+
+#if DEBUG
+            var debugWindow = new DebugWindow(Coordinator.StreamPlayer);
+            Coordinator.StreamPlayer.StreamingStarted += debugWindow.StreamPlayer_StreamingStarted;
+            //debugWindow.DataContext = Coordinator.StreamPlayer.BufferedStream;
+            debugWindow.Show();
+#endif
         }
 
         private void StartStopButton_Click(object sender, RoutedEventArgs e)

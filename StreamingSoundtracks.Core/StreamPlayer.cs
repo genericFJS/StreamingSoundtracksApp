@@ -19,7 +19,7 @@ namespace StreamingSoundtracks.Core
             "http://hi.streamingsoundtracks.com/",
             "http://hi1.streamingsoundtracks.com:8000/"
         };
-        private MemoryStream BufferedStream { get; set; }
+        public Stream BufferedStream { get; private set; }
 
         private Thread FetchingThread { get; set; }
         private Thread PlaybackThread { get; set; }
@@ -72,6 +72,7 @@ namespace StreamingSoundtracks.Core
         public event EventHandler NextTrackStarting;
         public event EventHandler PlaybackSecondElapsed;
         public event EventHandler PlaybackTenSecondsElapsed;
+        public event EventHandler StreamingStarted;
         public event PropertyChangedEventHandler PropertyChanged;
 
         private readonly TaskScheduler guiDispatcher;
@@ -104,7 +105,8 @@ namespace StreamingSoundtracks.Core
 
         private void FetchOnlineStream()
         {
-            BufferedStream = new MemoryStream();
+            BufferedStream = new CircularStream(BUFFER_LENGTH * 6);
+            Task.Factory.StartNew(() => { StreamingStarted?.Invoke(this, EventArgs.Empty); }, CancellationToken.None, TaskCreationOptions.None, guiDispatcher);
             using (var stream = new ShoutcastStream(Urls[0], "StreamingSoundtracksApp"))
             {
                 stream.StreamTitleChanged += new EventHandler(delegate (object e, EventArgs a)
