@@ -20,35 +20,26 @@ namespace StreamingSoundtracks.Core
         public ObservableCollection<PlaybackEntry> History { get; private set; } = new ObservableCollection<PlaybackEntry>();
         public ObservableCollection<PlaybackEntry> Queue { get; private set; } = new ObservableCollection<PlaybackEntry>();
 
-        private readonly TaskScheduler guiDispatcher;
+        private StreamPlayer StreamPlayer { get; }
+        private bool PlaybackUpdateQueued { get; set; } = false;
 
-        public Playlist()
+        private readonly TaskScheduler guiDispatcher;
+        private CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
+
+        public Playlist(StreamPlayer streamPlayer)
         {
+            StreamPlayer = streamPlayer;
             if (SynchronizationContext.Current == null)
                 SynchronizationContext.SetSynchronizationContext(new SynchronizationContext());
             guiDispatcher = TaskScheduler.FromCurrentSynchronizationContext();
-            UpdatePlaylists();
+            UpdateAllPlaylists(true);
         }
 
-        public void TryUpdatePlaylists()
+        public void UpdateAllPlaylists(bool forceUpdate = false)
         {
-            if (CurrentPlaying.PlaybackPositionFromEnd.TotalSeconds > 0)
-            {
-                _ = Task.Run(async () =>
-                  {
-                      var ms = Convert.ToInt32(CurrentPlaying.PlaybackPositionFromEnd.TotalMilliseconds + 100);
-                      await Task.Delay(ms);
-                      await Task.Factory.StartNew(() => { UpdatePlaylists(); }, CancellationToken.None, TaskCreationOptions.None, guiDispatcher);
-                  });
-            }
-            else
-            {
-                UpdatePlaylists();
-            }
-        }
-
-        public void UpdatePlaylists()
-        {
+            if (!StreamPlayer.IsPlaying && !forceUpdate)
+                return;
+            PlaybackUpdateQueued = false;
             using (WebClient webClient = new WebClient())
             {
                 UpdatePlaylist(webClient, HISTORY_URL, History);
@@ -57,8 +48,26 @@ namespace StreamingSoundtracks.Core
                 var currentPlayingJSON = webClient.DownloadString(CURRENT_PLAYING_URL);
                 var currentPlaying = JsonConvert.DeserializeObject<CurrentPlaying>(currentPlayingJSON);
                 CurrentPlaying.Update(currentPlaying);
+
                 UpdateTimeToCurrentPlaying();
             }
+            if (cancellationTokenSource.IsCancellationRequested)
+                cancellationTokenSource = new CancellationTokenSource();
+            _ = Task.Run(async () =>
+            {
+                var ms = Convert.ToInt32(CurrentPlaying.PlaybackPositionFromEnd.TotalMilliseconds);
+                try
+                {
+                    await Task.Delay(ms, cancellationTokenSource.Token);
+                    await Task.Factory.StartNew(() => { UpdateAllPlaylists(); }, CancellationToken.None, TaskCreationOptions.None, guiDispatcher);
+                }
+                catch (TaskCanceledException) { }
+            });
+        }
+
+        public void StopQueuedUpdate()
+        {
+            cancellationTokenSource.Cancel();
         }
 
         private void UpdatePlaylist(WebClient webClient, string url, ObservableCollection<PlaybackEntry> playlist)

@@ -70,7 +70,7 @@
                     <Button x:Name="MuteButton" Grid.Column="0" Click="MuteButton_Click" Margin="15">
                         <StackPanel Orientation="Horizontal">
                             <fa:ImageAwesome Icon="VolumeOff" VerticalAlignment="Center" HorizontalAlignment="Center"/>
-                            <fa:ImageAwesome Icon="Times" Margin="4,2,0,2" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{Binding IsMuted, Converter={StaticResource isMutedColorConverter}}"/>
+                            <fa:ImageAwesome Icon="Times" Margin="4,2,0,2" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="{Binding IsMute, Converter={StaticResource isMutedColorConverter}}"/>
                         </StackPanel>
                     </Button>
                     <Grid Grid.Column="1">
@@ -86,9 +86,9 @@
                         <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,-100">
                             <TextBlock Text="{x:Static p:Resources.VolumeDescription}"/>
                             <TextBlock Text=": "/>
-                            <TextBlock Text="{Binding Volume, StringFormat=p0, FallbackValue=100%}" HorizontalAlignment="Center" Width="40"/>
+                            <TextBlock Text="{Binding Volume, StringFormat={}{0}%, FallbackValue=100%}" HorizontalAlignment="Center" Width="40"/>
                         </StackPanel>
-                        <Slider Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" Value="{Binding Volume}" Minimum="0" Maximum="1" SmallChange="0.01" LargeChange="0.1" TickFrequency="0.1" VerticalAlignment="Center"/>
+                        <Slider Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" Value="{Binding Volume}" Minimum="0" Maximum="100" SmallChange="1" LargeChange="10" TickFrequency="1" VerticalAlignment="Center"/>
                     </Grid>
                     <Button x:Name="SettingsButton" Grid.Column="2" Margin="15" Click="SettingsButton_Click">
                         <fa:ImageAwesome Icon="Cog" VerticalAlignment="Center" HorizontalAlignment="Center"/>

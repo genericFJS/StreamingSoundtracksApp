@@ -12,7 +12,7 @@ namespace StreamingSoundtracks.Core.Properties {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "16.4.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "16.5.0.0")]
     internal sealed partial class Settings : global::System.Configuration.ApplicationSettingsBase {
         
         private static Settings defaultInstance = ((Settings)(global::System.Configuration.ApplicationSettingsBase.Synchronized(new Settings())));
@@ -25,11 +25,11 @@ namespace StreamingSoundtracks.Core.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0.8")]
+        [global::System.Configuration.DefaultSettingValueAttribute("80")]
         [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
-        public float Volume {
+        public int Volume {
             get {
-                return ((float)(this["Volume"]));
+                return ((int)(this["Volume"]));
             }
             set {
                 this["Volume"] = value;
@@ -40,12 +40,12 @@ namespace StreamingSoundtracks.Core.Properties {
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
         [global::System.Configuration.SettingsManageabilityAttribute(global::System.Configuration.SettingsManageability.Roaming)]
-        public bool IsMuted {
+        public bool IsMute {
             get {
-                return ((bool)(this["IsMuted"]));
+                return ((bool)(this["IsMute"]));
             }
             set {
-                this["IsMuted"] = value;
+                this["IsMute"] = value;
             }
         }
     }

@@ -1,60 +1,42 @@
-﻿using DevHost.Shoutcast;
-using NAudio.Wave;
-using System;
+﻿using System;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
+using Vlc.DotNet.Core;
 
 namespace StreamingSoundtracks.Core
 {
     public class StreamPlayer : INotifyPropertyChanged
     {
-
-        private readonly int BUFFER_LENGTH = 65536;
-        private long NextTrackPosition { get; set; } = 0;
         private string[] Urls { get; } = new string[] {
             "http://hi5.streamingsoundtracks.com/",
             "http://hi.streamingsoundtracks.com/",
             "http://hi1.streamingsoundtracks.com:8000/"
         };
-        public Stream BufferedStream { get; private set; }
 
-        private Thread FetchingThread { get; set; }
-        private Thread PlaybackThread { get; set; }
-
-        private bool isPlaying = false;
         public bool IsPlaying
         {
             get
             {
-                return isPlaying;
-            }
-            set
-            {
-                isPlaying = value;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsPlaying)));
+                return isOpening || VlcMediaPlayer.IsPlaying();
             }
         }
-
-        private bool isMuted = Properties.Settings.Default.IsMuted;
-        public bool IsMuted
+        private bool isMute = Properties.Settings.Default.IsMute;
+        public bool IsMute
         {
             get
             {
-                return isMuted;
+                return isMute;
             }
             set
             {
-                isMuted = value;
-                Properties.Settings.Default.IsMuted = IsMuted;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsMuted)));
+                isMute = value;
+                Properties.Settings.Default.IsMute = IsMute;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsMute)));
             }
         }
 
-        private float volume = Properties.Settings.Default.Volume;
-        public float Volume
+        private int volume = Properties.Settings.Default.Volume;
+        public int Volume
         {
             get
             {
@@ -63,115 +45,81 @@ namespace StreamingSoundtracks.Core
             set
             {
                 volume = value;
-                IsMuted = false;
+                IsMute = false;
                 Properties.Settings.Default.Volume = Volume;
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Volume)));
             }
         }
 
-        public event EventHandler NextTrackStarting;
-        public event EventHandler PlaybackSecondElapsed;
-        public event EventHandler PlaybackTenSecondsElapsed;
-        public event EventHandler StreamingStarted;
         public event PropertyChangedEventHandler PropertyChanged;
 
-        private readonly TaskScheduler guiDispatcher;
+        public VlcMediaPlayer VlcMediaPlayer { get; private set; }
+        private DirectoryInfo LibVlcDirectory { get; }
+        private bool isOpening = false;
 
-        public StreamPlayer()
+        public StreamPlayer(DirectoryInfo libVlcDirectory)
         {
-            if (SynchronizationContext.Current == null)
-                SynchronizationContext.SetSynchronizationContext(new SynchronizationContext());
-            guiDispatcher = TaskScheduler.FromCurrentSynchronizationContext();
+            LibVlcDirectory = libVlcDirectory;
+            ResetPlayer();
+        }
+
+        /// <summary>
+        /// Resetting player is necessary as stopping and starting may cause issues when the volume has been changed.
+        /// https://github.com/ZeBobo5/Vlc.DotNet/issues/130
+        /// https://github.com/ZeBobo5/Vlc.DotNet/issues/381
+        /// </summary>
+        public void ResetPlayer()
+        {
+            if (VlcMediaPlayer != null)
+                VlcMediaPlayer.Dispose();
+            VlcMediaPlayer = new VlcMediaPlayer(LibVlcDirectory, new string[] { "--aout=directsound" });
+            VlcMediaPlayer.Stopped += VlcMediaPlayer_Stopped;
+            VlcMediaPlayer.TimeChanged += VlcMediaPlayer_TimeChanged;
+            VlcMediaPlayer.Playing += VlcMediaPlayer_Playing;
+            VlcMediaPlayer.SetMedia(new Uri(Urls[0]));
+            VlcMediaPlayer.Audio.Volume = Volume;
+            VlcMediaPlayer.Audio.IsMute = IsMute;
+
+        }
+
+        private void VlcMediaPlayer_Playing(object sender, VlcMediaPlayerPlayingEventArgs e)
+        {
+            isOpening = false;
         }
 
         public void StartStreaming()
         {
-
-            IsPlaying = true;
-            if (!(PlaybackThread is null))
-                PlaybackThread.Abort();
-            if (!(FetchingThread is null))
-                FetchingThread.Abort();
-            FetchingThread = new Thread(FetchOnlineStream);
-            PlaybackThread = new Thread(PlayBufferedStream);
-            FetchingThread.Start();
-            PlaybackThread.Start();
+            if (isOpening)
+                return;
+            ResetPlayer();
+            isOpening = true;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsPlaying)));
+            VlcMediaPlayer.Play();
         }
 
         public void StopStreaming()
         {
-            IsPlaying = false;
+            isOpening = false;
+            if (VlcMediaPlayer.IsPlaying())
+                VlcMediaPlayer.Stop();
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsPlaying)));
         }
 
-        private void FetchOnlineStream()
+        private void VlcMediaPlayer_TimeChanged(object sender, VlcMediaPlayerTimeChangedEventArgs e)
         {
-            BufferedStream = new CircularStream(BUFFER_LENGTH * 6);
-            Task.Factory.StartNew(() => { StreamingStarted?.Invoke(this, EventArgs.Empty); }, CancellationToken.None, TaskCreationOptions.None, guiDispatcher);
-            using (var stream = new ShoutcastStream(Urls[0], "StreamingSoundtracksApp"))
-            {
-                stream.StreamTitleChanged += new EventHandler(delegate (object e, EventArgs a)
-                {
-                    NextTrackPosition = BufferedStream.Position;
-                });
-                byte[] buffer = new byte[BUFFER_LENGTH];
-                int read;
-                while ((read = stream.Read(buffer, 0, buffer.Length)) > 0)
-                {
-                    if (!IsPlaying)
-                        return;
-                    var currentPosition = BufferedStream.Position;
-                    BufferedStream.Position = BufferedStream.Length;
-                    BufferedStream.Write(buffer, 0, read);
-                    BufferedStream.Position = currentPosition;
-                }
-            }
+            var m = sender as VlcMediaPlayer;
+            var a = m.Audio;
+            if (IsMute && !VlcMediaPlayer.Audio.IsMute)
+                VlcMediaPlayer.Audio.IsMute = true;
+            if (!IsMute && VlcMediaPlayer.Audio.IsMute)
+                VlcMediaPlayer.Audio.IsMute = false;
+            if (VlcMediaPlayer.Audio.Volume != Volume)
+                VlcMediaPlayer.Audio.Volume = Volume;
         }
 
-        private void PlayBufferedStream()
+        private void VlcMediaPlayer_Stopped(object sender, VlcMediaPlayerStoppedEventArgs e)
         {
-            while (BufferedStream is null || BufferedStream.Length < BUFFER_LENGTH * 3)
-                Thread.Sleep(100);
-            BufferedStream.Position = 0;
-            while (true)
-            {
-                try
-                {
-                    using (WaveStream blockAlignedStream = new BlockAlignReductionStream(WaveFormatConversionStream.CreatePcmStream(new Mp3FileReader(BufferedStream))))
-                    {
-                        using (WaveOut waveOut = new WaveOut(WaveCallbackInfo.FunctionCallback()))
-                        {
-                            waveOut.Init(blockAlignedStream);
-                            waveOut.Play();
-                            var tick = 0;
-                            while (waveOut.PlaybackState == PlaybackState.Playing)
-                            {
-                                if (!IsPlaying)
-                                    return;
-                                if (IsMuted && waveOut.Volume != 0)
-                                    waveOut.Volume = 0;
-                                if (!IsMuted && waveOut.Volume != Volume)
-                                    waveOut.Volume = Volume;
-                                if (NextTrackPosition != 0 && BufferedStream.Position >= NextTrackPosition)
-                                {
-                                    Task.Factory.StartNew(() => { NextTrackStarting?.Invoke(this, EventArgs.Empty); }, CancellationToken.None, TaskCreationOptions.None, guiDispatcher);
-                                    NextTrackPosition = 0;
-                                }
-                                if (tick % 10 == 0)
-                                    Task.Factory.StartNew(() => { PlaybackSecondElapsed?.Invoke(this, EventArgs.Empty); }, CancellationToken.None, TaskCreationOptions.None, guiDispatcher);
-                                if (tick == 0)
-                                    Task.Factory.StartNew(() => { PlaybackTenSecondsElapsed?.Invoke(this, EventArgs.Empty); }, CancellationToken.None, TaskCreationOptions.None, guiDispatcher);
-                                tick = (tick + 1) % 100;
-                                Thread.Sleep(100);
-                            }
-                        }
-                    }
-                }
-                catch (InvalidOperationException e)
-                {
-                    Debug.WriteLine(e.Message);
-                    Thread.Sleep(100);
-                }
-            }
+            StopStreaming();
         }
     }
 }

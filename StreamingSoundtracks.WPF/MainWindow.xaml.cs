@@ -1,5 +1,8 @@
 ﻿using StreamingSoundtracks.Core;
+using System;
 using System.ComponentModel;
+using System.IO;
+using System.Reflection;
 using System.Windows;
 
 namespace StreamingSoundtracks
@@ -63,7 +66,7 @@ namespace StreamingSoundtracks
             }
         }
 
-        private Coordinator Coordinator { get; set; } = new Coordinator();
+        private Coordinator Coordinator { get; set; }
         private CurrentPlayingControl CurrentPlayingControl { get; set; } = new CurrentPlayingControl();
         private SettingsControl SettingsControl { get; set; } = new SettingsControl();
 
@@ -72,6 +75,10 @@ namespace StreamingSoundtracks
         public MainWindow()
         {
             InitializeComponent();
+
+            var currentDirectory = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
+            var libVlcDirectory = new DirectoryInfo(Path.Combine(currentDirectory, "libvlc", IntPtr.Size == 4 ? "win-x86" : "win-x64"));
+            Coordinator = new Coordinator(libVlcDirectory);
 
             Queue.DataContext = Coordinator.Playlist;
             History.DataContext = Coordinator.Playlist;
@@ -87,13 +94,6 @@ namespace StreamingSoundtracks
                 Coordinator.StartAudioStream();
 
             Window_SizeChanged(null, null);
-
-#if DEBUG
-            var debugWindow = new DebugWindow(Coordinator.StreamPlayer);
-            Coordinator.StreamPlayer.StreamingStarted += debugWindow.StreamPlayer_StreamingStarted;
-            //debugWindow.DataContext = Coordinator.StreamPlayer.BufferedStream;
-            debugWindow.Show();
-#endif
         }
 
         private void StartStopButton_Click(object sender, RoutedEventArgs e)
@@ -126,7 +126,7 @@ namespace StreamingSoundtracks
 
         private void MuteButton_Click(object sender, RoutedEventArgs e)
         {
-            Coordinator.StreamPlayer.IsMuted = !Coordinator.StreamPlayer.IsMuted;
+            Coordinator.StreamPlayer.IsMute = !Coordinator.StreamPlayer.IsMute;
         }
 
         private void SettingsButton_Click(object sender, RoutedEventArgs e)

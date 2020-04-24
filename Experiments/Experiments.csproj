@@ -35,9 +35,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="NAudio, Version=1.10.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\StreamingSoundtracks\packages\NAudio.1.10.0\lib\net35\NAudio.dll</HintPath>
-    </Reference>
     <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\StreamingSoundtracks\packages\Newtonsoft.Json.12.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
@@ -66,10 +63,6 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\DevHost.Shoutcast\DevHost.Shoutcast.csproj">
-      <Project>{bc43dc88-a22c-445e-8d1f-7404fb9ea245}</Project>
-      <Name>DevHost.Shoutcast</Name>
-    </ProjectReference>
     <ProjectReference Include="..\StreamingSoundtracks.Core\StreamingSoundtracks.Core.csproj">
       <Project>{2fc8ef86-fa65-4534-aa09-c4792e77cfb7}</Project>
       <Name>StreamingSoundtracks.Core</Name>

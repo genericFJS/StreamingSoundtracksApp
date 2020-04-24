@@ -1,15 +1,39 @@
-﻿namespace StreamingSoundtracks.Core
+﻿using System.IO;
+using Vlc.DotNet.Core;
+
+namespace StreamingSoundtracks.Core
 {
     public class Coordinator
     {
-        public Playlist Playlist { get; set; } = new Playlist();
-        public StreamPlayer StreamPlayer { get; set; } = new StreamPlayer();
+        public Playlist Playlist { get; set; }
+        public StreamPlayer StreamPlayer { get; set; }
 
-        public Coordinator()
+        private long lastUpdatedTimeToCurrentPlaying = 0;
+        private long lastUpdatedPlaybackPosition = 0;
+
+        public Coordinator(DirectoryInfo libVlcDirectory)
         {
-            StreamPlayer.NextTrackStarting += StreamPlayer_NextTrackStarting;
-            StreamPlayer.PlaybackSecondElapsed += StreamPlayer_PlaybackSecondElapsed;
-            StreamPlayer.PlaybackTenSecondsElapsed += StreamPlayer_PlaybackTenSecondsElapsed;
+            StreamPlayer = new StreamPlayer(libVlcDirectory);
+            Playlist = new Playlist(StreamPlayer);
+        }
+
+        private void VlcMediaPlayer_Stopped(object sender, VlcMediaPlayerStoppedEventArgs e)
+        {
+            Playlist.StopQueuedUpdate();
+        }
+
+        private void VlcMediaPlayer_TimeChanged(object sender, Vlc.DotNet.Core.VlcMediaPlayerTimeChangedEventArgs e)
+        {
+            if (lastUpdatedPlaybackPosition + 1000 < e.NewTime)
+            {
+                Playlist.CurrentPlaying.UpdatePlaybackPosition();
+                lastUpdatedPlaybackPosition = e.NewTime;
+            }
+            if (lastUpdatedTimeToCurrentPlaying + 10000 < e.NewTime)
+            {
+                Playlist.UpdateTimeToCurrentPlaying();
+                lastUpdatedTimeToCurrentPlaying = e.NewTime;
+            }
         }
 
         ~Coordinator()
@@ -17,25 +41,14 @@
             Properties.Settings.Default.Save();
         }
 
-        private void StreamPlayer_PlaybackTenSecondsElapsed(object sender, System.EventArgs e)
-        {
-            Playlist.UpdateTimeToCurrentPlaying();
-        }
-
-        private void StreamPlayer_PlaybackSecondElapsed(object sender, System.EventArgs e)
-        {
-            Playlist.CurrentPlaying.UpdatePlaybackPosition();
-        }
-
-        private void StreamPlayer_NextTrackStarting(object sender, System.EventArgs e)
-        {
-            Playlist.TryUpdatePlaylists();
-        }
-
         public void StartAudioStream()
         {
-            Playlist.UpdatePlaylists();
+            lastUpdatedTimeToCurrentPlaying = 0;
+            lastUpdatedPlaybackPosition = 0;
             StreamPlayer.StartStreaming();
+            StreamPlayer.VlcMediaPlayer.TimeChanged += VlcMediaPlayer_TimeChanged;
+            StreamPlayer.VlcMediaPlayer.Stopped += VlcMediaPlayer_Stopped;
+            Playlist.UpdateAllPlaylists();
         }
 
         public void StopAudioStream()
