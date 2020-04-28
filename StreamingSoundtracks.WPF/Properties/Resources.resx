@@ -117,6 +117,22 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="AboutApp" xml:space="preserve">
+    <value>StreamingSoundtracksApp by</value>
+    <comment>About window app info</comment>
+  </data>
+  <data name="AboutButton" xml:space="preserve">
+    <value>About</value>
+    <comment>Label for about window of settings menu</comment>
+  </data>
+  <data name="AboutLibs" xml:space="preserve">
+    <value>This app uses the following libraries:</value>
+    <comment>About window library info</comment>
+  </data>
+  <data name="AboutSst" xml:space="preserve">
+    <value>This app has no official affiliation to StreamingSoundtracks.com. It uses its public streams and API for audio/image data. For relevant copyright information visit:</value>
+    <comment>About window StreamingSoundtracks info</comment>
+  </data>
   <data name="AutoplayDescription" xml:space="preserve">
     <value>Start stream on startup</value>
     <comment>Description for checkbox</comment>

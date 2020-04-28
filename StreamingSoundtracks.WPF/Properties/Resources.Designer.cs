@@ -61,6 +61,42 @@ namespace StreamingSoundtracks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to StreamingSoundtracksApp by.
+        /// </summary>
+        public static string AboutApp {
+            get {
+                return ResourceManager.GetString("AboutApp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to About.
+        /// </summary>
+        public static string AboutButton {
+            get {
+                return ResourceManager.GetString("AboutButton", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This app uses the following libraries:.
+        /// </summary>
+        public static string AboutLibs {
+            get {
+                return ResourceManager.GetString("AboutLibs", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This app has no official affiliation to StreamingSoundtracks.com. It uses its public streams and API for audio/image data. For relevant copyright information visit:.
+        /// </summary>
+        public static string AboutSst {
+            get {
+                return ResourceManager.GetString("AboutSst", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Start stream on startup.
         /// </summary>
         public static string AutoplayDescription {

@@ -11,5 +11,11 @@ namespace StreamingSoundtracks
         {
             InitializeComponent();
         }
+
+        private void AboutButton_Click(object sender, System.Windows.RoutedEventArgs e)
+        {
+            var aboutWindow = new AboutWindow();
+            aboutWindow.ShowDialog();
+        }
     }
 }
